@@ -40,7 +40,7 @@ This project runs directly in any modern browser with no additional dependencies
 ### Installation
 
 1. **Clone the repository**
-git clone https://github.com/bocaletto-luca/rick-and-morty-explorer.git cd rick-and-morty-explorer
+git clone https://github.com/bocaletto-luca/Rick-and-Morty.git cd rick-and-morty-explorer
 
 2. **Launch the Application**
 
