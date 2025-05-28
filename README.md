@@ -1,4 +1,4 @@
-# Rick and Morty Explorer
+# Rick and Morty | WEBAPP
 #### Author: Bocaletto Luca
 
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)  
@@ -6,7 +6,7 @@
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)  
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 
-Rick and Morty Explorer is an interactive web application that lets you explore characters from the famous series "Rick and Morty." The application leverages the official API to fetch character data and boasts a modern, responsive design built with HTML, CSS, JavaScript, and Bootstrap 5.
+Rick and Morty is an interactive web application that lets you explore characters from the famous series "Rick and Morty." The application leverages the official API to fetch character data and boasts a modern, responsive design built with HTML, CSS, JavaScript, and Bootstrap 5.
 
 ## Features
 
