@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rick and Morty Explorer</title>
+  <!-- Bootstrap CSS per uno stile moderno e responsive -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+  <!-- Stili personalizzati -->
+  <style>
+    body {
+      background: #f4f4f4;
+      font-family: Arial, sans-serif;
+    }
+    /* Rendiamo tutte le card uniformi */
+    .card {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s;
+      margin-bottom: 20px;
+      height: 100%;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .card-img-top {
+      height: 200px;         /* Altezza fissa per l'immagine */
+      object-fit: cover;      /* Copertura uniforme, senza deformare l'immagine */
+    }
+    .card-body {
+      min-height: 70px;       /* Impostiamo un'altezza minima per il corpo */
+    }
+    /* Limitiamo il titolo a una riga e aggiungiamo ellipsis se troppo lungo */
+    .card-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0;
+    }
+    .filter-container {
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .btn-group .btn.active {
+      background-color: #0d6efd;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header centrato -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+    <div class="container justify-content-center">
+      <a class="navbar-brand" href="#">Rick and Morty Explorer</a>
+    </div>
+  </nav>
+
+  <!-- Menu per i filtri (stato) -->
+  <div class="container mb-3">
+    <div class="d-flex justify-content-center">
+      <div class="btn-group filter-container flex-wrap" role="group" aria-label="Filtri Characters">
+        <button type="button" class="btn btn-outline-primary active" data-filter="all" onclick="loadCharacters('all')">Tutti</button>
+        <button type="button" class="btn btn-outline-primary" data-filter="alive" onclick="loadCharacters('alive')">Alive</button>
+        <button type="button" class="btn btn-outline-primary" data-filter="dead" onclick="loadCharacters('dead')">Dead</button>
+        <button type="button" class="btn btn-outline-primary" data-filter="unknown" onclick="loadCharacters('unknown')">Unknown</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container per le schede e la paginazione -->
+  <div class="container">
+    <div class="row" id="cardsContainer">
+      <!-- Le card verranno inserite dinamicamente -->
+    </div>
+    <nav>
+      <ul class="pagination justify-content-center" id="pagination"></ul>
+    </nav>
+  </div>
+
+  <!-- Modal per i dettagli -->
+  <div class="modal fade" id="characterModal" tabindex="-1" aria-labelledby="characterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="characterModalLabel">Dettagli</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <!-- Immagine del personaggio -->
+            <div class="col-md-4">
+              <img id="modalImage" src="" alt="Character Image" class="img-fluid">
+            </div>
+            <!-- Dettagli -->
+            <div class="col-md-8" id="modalDetails"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-light text-center p-3 mt-4">
+    <div class="container">
+      Bocaletto Luca
+    </div>
+  </footer>
+
+  <!-- Bootstrap Bundle JS (include Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- Script della webapp -->
+  <script>
+    let currentFilter = 'all';
+    let currentPage = 1;
+    let totalPages = 1;
+
+    // Funzione per caricare i personaggi dalla Rick and Morty API
+    function loadCharacters(filter = 'all', page = 1) {
+      currentFilter = filter;
+      currentPage = page;
+      // Aggiorna lo stato attivo dei pulsanti di filtro
+      const buttons = document.querySelectorAll('.btn-group button');
+      buttons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-filter') === filter) {
+          btn.classList.add('active');
+        }
+      });
+      document.getElementById('cardsContainer').innerHTML = '<div class="text-center my-3">Caricamento...</div>';
+
+      // Costruisce l'URL, aggiungendo il filtro se non è "all"
+      let url = `https://rickandmortyapi.com/api/character/?page=${page}`;
+      if (filter !== 'all') {
+        url += `&status=${filter}`;
+      }
+      console.log("Fetching:", url);
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Errore nel caricamento dei dati");
+          }
+          return response.json();
+        })
+        .then(data => {
+          totalPages = data.info.pages;
+          displayCharacters(data.results);
+          updatePagination();
+        })
+        .catch(error => {
+          console.error(error);
+          document.getElementById('cardsContainer').innerHTML = '<div class="text-center my-3 text-danger">Errore nel caricamento</div>';
+        });
+    }
+
+    // Funzione per creare e visualizzare le card dei personaggi
+    function displayCharacters(characters) {
+      const container = document.getElementById('cardsContainer');
+      container.innerHTML = '';
+      characters.forEach(character => {
+        const col = document.createElement('div');
+        col.className = 'col-md-3 col-sm-6 mb-3';
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.cursor = 'pointer';
+
+        const img = document.createElement('img');
+        img.className = 'card-img-top';
+        img.src = character.image;
+        img.alt = character.name;
+        card.appendChild(img);
+
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body text-center';
+
+        const title = document.createElement('h5');
+        title.className = 'card-title';
+        title.textContent = character.name;
+        cardBody.appendChild(title);
+        card.appendChild(cardBody);
+
+        // Al click della card (o immagine) si aprono i dettagli
+        card.addEventListener('click', () => {
+          showCharacterDetails(character);
+        });
+
+        col.appendChild(card);
+        container.appendChild(col);
+      });
+    }
+
+    // Funzione per aggiornare la paginazione
+    function updatePagination() {
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = '';
+
+      // Bottone Previous
+      const prevLi = document.createElement('li');
+      prevLi.className = 'page-item ' + (currentPage === 1 ? 'disabled' : '');
+      const prevLink = document.createElement('a');
+      prevLink.className = 'page-link';
+      prevLink.href = '#';
+      prevLink.textContent = 'Previous';
+      prevLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentPage > 1) {
+          loadCharacters(currentFilter, currentPage - 1);
+        }
+      });
+      prevLi.appendChild(prevLink);
+      pagination.appendChild(prevLi);
+
+      // Numeri di pagina
+      for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        li.className = 'page-item ' + (i === currentPage ? 'active' : '');
+        const link = document.createElement('a');
+        link.className = 'page-link';
+        link.href = '#';
+        link.textContent = i;
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          loadCharacters(currentFilter, i);
+        });
+        li.appendChild(link);
+        pagination.appendChild(li);
+      }
+
+      // Bottone Next
+      const nextLi = document.createElement('li');
+      nextLi.className = 'page-item ' + (currentPage === totalPages ? 'disabled' : '');
+      const nextLink = document.createElement('a');
+      nextLink.className = 'page-link';
+      nextLink.href = '#';
+      nextLink.textContent = 'Next';
+      nextLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentPage < totalPages) {
+          loadCharacters(currentFilter, currentPage + 1);
+        }
+      });
+      nextLi.appendChild(nextLink);
+      pagination.appendChild(nextLi);
+    }
+
+    // Funzione per mostrare i dettagli di un personaggio nel modal
+    function showCharacterDetails(character) {
+      document.getElementById('characterModalLabel').textContent = character.name;
+      document.getElementById('modalImage').src = character.image;
+      // Mostriamo dettagli aggiuntivi (status, specie, type, gender, origine, location, numero di episodi e data di creazione)
+      document.getElementById('modalDetails').innerHTML = `
+        <p><strong>Status:</strong> ${character.status}</p>
+        <p><strong>Species:</strong> ${character.species}</p>
+        <p><strong>Type:</strong> ${character.type ? character.type : 'N/A'}</p>
+        <p><strong>Gender:</strong> ${character.gender}</p>
+        <p><strong>Origin:</strong> ${character.origin.name}</p>
+        <p><strong>Last Known Location:</strong> ${character.location.name}</p>
+        <p><strong>Episodes:</strong> ${character.episode.length}</p>
+        <p><strong>Created:</strong> ${new Date(character.created).toLocaleDateString()}</p>
+      `;
+      const modalEl = document.getElementById('characterModal');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+
+    // Al caricamento del DOM, parte il caricamento dei personaggi (filtro "all", pagina 1)
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCharacters('all', 1);
+    });
+  </script>
+</body>
+</html>
